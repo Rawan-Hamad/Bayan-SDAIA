@@ -9,8 +9,17 @@
 | XLM-R | 1.67 | 1.43 | 21 | 23 | 0.00 |
 | CAMeLBERT | 1.41 | 2.70 | 20 | 38 | 0.00 |
 | DistilBERT | 4.53 | 1.30 | 47 | 21 | 0.00 |
-- Golden preprocessing: ___ / 25 passed
-- PII masking recall: ___ / 60 = ___%
+- Golden preprocessing: 25 / 25 passed
+- PII masking recall: 60 / 60 = 100%
+
+## Lab 2 Benchmark: Pad-Attention Leakage Results
+| Metric / Condition | Value / Status |
+|---|---|
+| Pad Attention Mass (Without Mask) | `0.8093` |
+| Pad Attention Mass (With Mask) | `0.0` |
+| Pad Leak Removed | `True` |
+| Numerical Equivalence | `True` |
+| Causal Masking (Future Attention == 0) | `True` |
 
 ## Lab 3 — Models
 | Model | Metric | Validation | Frozen test | Train time |

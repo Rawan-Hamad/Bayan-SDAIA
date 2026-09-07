@@ -49,11 +49,23 @@ For each one record: example, why it matters, and clean/preserve/task-dependent.
 - Arabic Flow & Normalization: Unicode NFC normalization and Tatweel removal ensured consistent character mapping, yielding accurate and clean sentence tokens.
 
 
-## Lab 2 — Parameter audit
+## Lab 2 - Parameter audit
+
 | Checkpoint | Total params | Embeddings % | Other notes |
-|---|---:|---:|---|
-| mBERT | | | |
-| CAMeLBERT | | | |
+|---|---|---|---|
+| mBERT | 177,853,440 | 51.85% (92,208,384) | Larger vocab size (multilingual tax) |
+| CamelBERT | 109,081,344 | 21.49% (23,436,288) | Targeted Arabic vocab size |
+
+* **Why is the embedding share different?**  
+The embedding share differs due to the significantly larger vocabulary size of the multilingual model (mBERT has ~119k tokens vs. CamelBERT's smaller Arabic-specific vocabulary), which directly increases the size of the token embedding matrix and incurs the 'multilingual tax'.
+-Decoder-style causal attention
+
+## Lab 2 - Step 5: Attention-map Diagnostics & Pad Leakage
+* **Causal Mask Verification:** Confirmed future attention weights are strictly zero (`True`), ensuring proper autoregressive masking.
+* **Pad-Attention Leakage Analysis:** 
+  * Without a padding mask, a significant attention mass leaks into the `[PAD]` token (`0.8093`).
+  * With the correct attention mask, the pad attention mass drops completely to `0.0`, confirming that the leakage is successfully eliminated (`Pad leak removed: True`).
+
 
 ## Lab 4 — Dialect audit
 - Distribution:
