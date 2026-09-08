@@ -22,12 +22,13 @@
 | Causal Masking (Future Attention == 0) | `True` |
 
 ## Lab 3 — Models
-| Model | Metric | Validation | Frozen test | Train time |
+
+| Model | Metric | Validation | Frozen Test | Train time |
 |---|---|---:|---:|---:|
-| TF-IDF + LinearSVC | macro-F1 | | | |
-| Topic classifier | macro-F1 | | | |
-| NER | entity-F1 | | | |
-| QA | span/null smoke | | | |
+| TF-IDF + LinearSVC | macro-F1 | 1.0000 | 1.0000 | - |
+| Topic classifier (CAMeLBERT) | macro-F1 | 1.0000 | 1.0000 | 269.82 s |
+| NER | entity-F1 |  |  |  |
+| QA | span/null smoke |  |  |  |
 
 ## Lab 4 — Arabic model bake-off
 | Checkpoint | macro-F1 all | Gulf | MSA | AR fertility |
