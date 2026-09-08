@@ -27,7 +27,7 @@
 |---|---|---:|---:|---:|
 | TF-IDF + LinearSVC | macro-F1 | 1.0000 | 1.0000 | - |
 | Topic classifier (CAMeLBERT) | macro-F1 | 1.0000 | 1.0000 | 269.82 s |
-| NER | entity-F1 |  |  |  |
+| NER | entity-F1 | 1.0000 | 1.0000 | 208.46 s |
 | QA | span/null smoke |  |  |  |
 
 ## Lab 4 — Arabic model bake-off
@@ -68,3 +68,9 @@
 - HTTP p99, 16 concurrent:
 - classifier quantisation decision:
 - NER quantisation decision:
+
+## Lab 3A — TF-IDF Baseline
+
+| Model | Metric | Validation | Frozen Test |
+|---|---|---:|---:|
+| TF-IDF + LinearSVC | macro-F1 | 1.0000 | 1.0000 |
