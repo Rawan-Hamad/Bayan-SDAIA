@@ -1,12 +1,14 @@
 """Lab 3B: fine-tune token classification with correct alignment."""
 
 import argparse
+import hashlib
+import json
 from pathlib import Path
 
 import numpy as np
 import torch
 from datasets import Dataset, DatasetDict
-from seqeval.metrics import accuracy_score, f1_score, precision_score, recall_score
+from seqeval.metrics import classification_report, accuracy_score, f1_score, precision_score, recall_score
 from transformers import (
     AutoModelForTokenClassification,
     AutoTokenizer,
@@ -16,7 +18,7 @@ from transformers import (
     set_seed,
 )
 
-from bayan.models.ner import align_labels
+from bayan.models.ner import align_labels, prepare_ner_tokens
 
 
 CHECKPOINT = "CAMeL-Lab/bert-base-arabic-camelbert-mix"
@@ -56,6 +58,11 @@ def parse_args():
         default=42,
     )
 
+    parser.add_argument("--segmentation", choices=["none", "d3tok"], default="none")
+    parser.add_argument("--data", default=NER_FILE)
+    parser.add_argument("--checkpoint", default=CHECKPOINT)
+    parser.add_argument("--epochs", type=float, default=4)
+    parser.add_argument("--eval-split", choices=["validation", "test"], default="test")
     return parser.parse_args()
 
 
@@ -98,7 +105,9 @@ def read_conll(path):
             if line.startswith("#") or line.startswith("-DOCSTART-"):
                 continue
 
-            parts = line.split()
+            parts = line.rsplit(maxsplit=1)
+            if len(parts) != 2:
+                raise ValueError(f"Invalid CoNLL row: {line!r}")
 
             # First column = token
             # Last column = BIO label
@@ -147,10 +156,11 @@ def build_dataset(path, seed):
     )
 
 
-def tokenize_and_align_labels(examples, tokenizer):
+def tokenize_and_align_labels(examples, tokenizer, segmentation="none"):
+    prepared = [prepare_ner_tokens(words, segmentation) for words in examples["tokens"]]
     tokenized = tokenizer(
-        examples["tokens"],
-        truncation=True,
+        [pieces for pieces, _ in prepared],
+        truncation=False,
         max_length=256,
         is_split_into_words=True,
     )
@@ -158,7 +168,13 @@ def tokenize_and_align_labels(examples, tokenizer):
     all_labels = []
 
     for i, word_labels in enumerate(examples["ner_tags"]):
-        word_ids = tokenized.word_ids(batch_index=i)
+        if len(tokenized["input_ids"][i]) > 256:
+            raise ValueError("NER sequence exceeds 256 tokens; refusing unequal truncation.")
+        piece_ids = tokenized.word_ids(batch_index=i)
+        origins = prepared[i][1]
+        word_ids = [None if index is None else origins[index] for index in piece_ids]
+        if set(word_ids) - {None} != set(range(len(word_labels))):
+            raise ValueError("Tokenizer dropped an original annotation unit.")
 
         aligned = align_labels(
             word_ids,
@@ -202,7 +218,13 @@ def compute_metrics(eval_pred):
         true_predictions.append(sentence_predictions)
         true_labels.append(sentence_labels)
 
+    report = classification_report(
+        true_labels, true_predictions, output_dict=True, zero_division=0,
+    )
+    location = report.get("LOCATION", {})
     return {
+        "location_recall": location.get("recall", 0.0),
+        "location_support": location.get("support", 0),
         "precision": precision_score(
             true_labels,
             true_predictions,
@@ -243,7 +265,7 @@ def main():
     # -------------------------
 
     dataset = build_dataset(
-        NER_FILE,
+        args.data,
         args.seed,
     )
 
@@ -254,7 +276,7 @@ def main():
     # -------------------------
 
     tokenizer = AutoTokenizer.from_pretrained(
-        CHECKPOINT,
+        args.checkpoint,
         use_fast=True,
     )
 
@@ -266,8 +288,10 @@ def main():
         lambda batch: tokenize_and_align_labels(
             batch,
             tokenizer,
+            args.segmentation,
         ),
         batched=True,
+        load_from_cache_file=False,
     )
 
     # -------------------------
@@ -275,7 +299,7 @@ def main():
     # -------------------------
 
     model = AutoModelForTokenClassification.from_pretrained(
-        CHECKPOINT,
+        args.checkpoint,
         num_labels=len(LABELS),
         id2label=id2label,
         label2id=label2id,
@@ -286,14 +310,14 @@ def main():
     # -------------------------
 
     training_args = TrainingArguments(
-        output_dir="runs/ner",
+        output_dir=str(output_dir / "checkpoints"),
 
         learning_rate=2e-5,
 
         per_device_train_batch_size=16,
         per_device_eval_batch_size=16,
 
-        num_train_epochs=4,
+        num_train_epochs=args.epochs,
 
         weight_decay=0.01,
         warmup_ratio=0.1,
@@ -351,11 +375,11 @@ def main():
     # -------------------------
 
     test_metrics = trainer.evaluate(
-        tokenized_dataset["test"],
-        metric_key_prefix="test",
+        tokenized_dataset[args.eval_split],
+        metric_key_prefix=args.eval_split,
     )
 
-    print("\nNER Test Results:")
+    print(f"\nNER {args.eval_split} Results ({args.segmentation}):")
     print(test_metrics)
 
     # -------------------------
@@ -365,7 +389,29 @@ def main():
     trainer.save_model(output_dir)
     tokenizer.save_pretrained(output_dir)
 
-    print(f"\nSaved NER artefact to: {output_dir}")
+    contract = {
+        "segmentation": args.segmentation,
+        "scheme": "d3tok" if args.segmentation == "d3tok" else None,
+        "normalization": "none (CAMeL d3tok output is undiacritized)",
+        "alignment": "first subword per original annotation unit; rest -100",
+        "seed": args.seed,
+        "checkpoint": args.checkpoint,
+        "epochs": args.epochs,
+        "eval_split": args.eval_split,
+        "data_sha256": hashlib.sha256(Path(args.data).read_bytes()).hexdigest(),
+        "split_sizes": {key: len(value) for key, value in dataset.items()},
+        "split_sha256": {
+            key: hashlib.sha256(json.dumps(value.to_dict(), sort_keys=True).encode()).hexdigest()
+            for key, value in dataset.items()
+        },
+    }
+    (output_dir / "preprocessing.json").write_text(
+        json.dumps(contract, indent=2), encoding="utf-8",
+    )
+    (output_dir / "metrics.json").write_text(
+        json.dumps(test_metrics, indent=2), encoding="utf-8",
+    )
+    print(f"\\nSaved NER artefact and metrics to: {output_dir}")
 
 
 if __name__ == "__main__":

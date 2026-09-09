@@ -37,6 +37,18 @@
 | Arabic dialect-aware | | | | |
 | optional third model | | | | |
 
+
+### Lab 4 — Arabic clitic segmentation
+
+| Segmentation | LOCATION Recall | Delta | Test F1 | Test Accuracy |
+|---|---:|---:|---:|---:|
+| Baseline (no segmentation) | 1.0000 | — | 1.0000 | 1.0000 |
+| D3Tok | 1.0000 | +0.0000 | 1.0000 | 1.0000 |
+
+**Segmentation scheme:** CAMeL Tools D3Tok  
+**LOCATION recall delta:** 1.0000 - 1.0000 = **0.0000 (no regression)**  
+**D3Tok training runtime:** 6384.24 s (CPU)
+
 ## Lab 5 — Search
 | Configuration | recall@10 | MRR@10 | p50 latency/query |
 |---|---:|---:|---:|

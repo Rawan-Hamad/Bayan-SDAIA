@@ -1,5 +1,6 @@
 """Lab 4: explicit Arabic normalisation profiles for model input."""
 from dataclasses import dataclass
+from functools import lru_cache
 import re
 import unicodedata
 
@@ -39,6 +40,37 @@ def normalize_arabic(text: str, profile: ArabicProfile) -> str:
     return " ".join(model_text.split())
 
 
+@lru_cache(maxsize=1)
+def _clitic_tokenizer():
+    """Load once, on demand; baseline runs do not require CAMeL data."""
+    from camel_tools.disambig.mle import MLEDisambiguator
+    from camel_tools.tokenizers.morphological import MorphologicalTokenizer
+
+    try:
+        disambiguator = MLEDisambiguator.pretrained("calima-msa-r13")
+    except (OSError, ValueError) as exc:
+        raise RuntimeError(
+            "Install CAMeL resources in the active environment: "
+            "camel_data -i light"
+        ) from exc
+    return MorphologicalTokenizer(
+        disambiguator, scheme="d3tok", split=True, diac=False,
+    )
+
+
+@lru_cache(maxsize=32768)
+def _segment_word(word: str) -> tuple[str, ...]:
+    # Preserve English identifiers, underscores, dates and punctuation.
+    if not re.search("[\u0621-\u063a\u0641-\u064a]", word):
+        return (word,)
+    return tuple(piece for piece in _clitic_tokenizer().tokenize([word]) if piece)
+
+
 def segment(text: str) -> list[str]:
-    # TODO(Lab 4): wire the chosen CAMeL Tools clitic segmentation scheme.
-    raise NotImplementedError
+    """D3 clitics with CAMeL '+' markers; no destructive letter folding.
+
+    Apply the same wordwise MLE path in training, evaluation and inference.
+    The analysis database is MSA-based; dialect coverage is not guaranteed.
+    """
+    return [piece for word in text.split() for piece in _segment_word(word)]
+
