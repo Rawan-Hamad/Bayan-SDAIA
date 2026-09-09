@@ -68,5 +68,22 @@ The embedding share differs due to the significantly larger vocabulary size of t
 
 
 ## Lab 4 — Dialect audit
-- Distribution:
-- One-sentence implication for MSA-only evaluation:
+- Source: `data/raw/bayan_feedback.csv`; supplied `dialect_region` labels, filtered to `lang == ar`.
+- Scope: descriptive distribution across all supplied splits; no model evaluation or test-set tuning.
+- Total: 12,000 records; Arabic: 7,200 (60%); English: 4,800 (40%).
+
+| Dialect / region | Count | % of Arabic |
+|---|---:|---:|
+| Gulf | 4,800 | 66.67% |
+| MSA | 2,400 | 33.33% |
+
+- Implication: MSA-only evaluation covers only one third of the Arabic records and cannot establish performance on the Gulf majority; report Gulf and MSA metrics separately.
+- Reproduce: `python scripts/dialect_audit.py`.
+- This audits existing labels in synthetic data; it does not infer dialects or measure classifier accuracy.
+
+### Lab 4 — Normalisation profiles
+- `bayan_ar_v1` follows the supplied golden fixture: folds alef variants, hamza carriers, alef maqsura and taa marbuta.
+- The starter requests two profiles but only names/specifies one. `bayan_ar_preserve_v1` is a local conservative choice that preserves letter forms, pending any additional course specification.
+- Both profiles use NFC, remove tatweel, normalise whitespace and optionally remove Arabic diacritics via `dediacritize=True`.
+- Keep display text in the original variable and assign `normalize_arabic(display_text, profile)` to a separate model-text variable. Character offsets from model text are not display-text offsets.
+
