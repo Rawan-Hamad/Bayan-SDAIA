@@ -52,12 +52,12 @@
 ## Lab 5 — Search
 | Configuration | recall@10 | MRR@10 | p50 latency/query |
 |---|---:|---:|---:|
-| bi-encoder only | | | |
-| + cross-encoder rerank | | | |
-| cross-lingual slice | | | |
+| bi-encoder only | 0.0026 | 0.0026 | 16.86 ms |
+| + cross-encoder rerank | 0.0179 | 0.0244 | 56.25 ms |
+| cross-lingual slice | N/A | N/A | N/A |
 
-- no-answer empty-correct: ___ / 20
-- cross-lingual gap: ___
+- no-answer empty-correct: 20 / 20
+- cross-lingual gap: N/A
 
 ## Lab 6 — Evaluation
 | Model | Aggregate macro-F1 [CI] | Gulf [CI] | Invariance pass | MFT pass |
