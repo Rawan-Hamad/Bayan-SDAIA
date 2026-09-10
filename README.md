@@ -1,6 +1,6 @@
 # Bayan | بيان
 ## SDA-AIE-211 — Natural Language Processing with Transformers
-
+https://github.com/SDAIAAcademy
 > **From raw bilingual text to a working NLP service — one lab at a time.**
 ---
 
