@@ -45,8 +45,8 @@
 | Baseline (no segmentation) | 1.0000 | — | 1.0000 | 1.0000 |
 | D3Tok | 1.0000 | +0.0000 | 1.0000 | 1.0000 |
 
-**Segmentation scheme:** CAMeL Tools D3Tok  
-**LOCATION recall delta:** 1.0000 - 1.0000 = **0.0000 (no regression)**  
+**Segmentation scheme:** CAMeL Tools D3Tok
+**LOCATION recall delta:** 1.0000 - 1.0000 = **0.0000 (no regression)**
 **D3Tok training runtime:** 6384.24 s (CPU)
 
 ## Lab 5 — Search
@@ -86,3 +86,25 @@
 | Model | Metric | Validation | Frozen Test |
 |---|---|---:|---:|
 | TF-IDF + LinearSVC | macro-F1 | 1.0000 | 1.0000 |
+
+### Lab 6 - Step 3: Behavioural suite
+
+Model: local CAMeLBERT topic classifier (CPU, shared preprocessing).
+Evidence: [case results](data/eval/behavioural_results.json).
+
+| Suite | Cases | Unique cases | Passed | Failed | Skipped | Pass rate | Failure rate | Target |
+|---|---:|---:|---:|---:|---:|---|---|---|
+| invariance | 200 | 10 | 200 | 0 | 0 | 100.0% | 0.0% | 95% met |
+| directional | 200 | 10 | 0 | 0 | 200 | N/A | N/A | N/A |
+| mft | 16 | 16 | 14 | 2 | 0 | 87.5% | 12.5% | 90% NOT met |
+
+Invariance covers whitespace changes only (10 unique pairs repeated across 200 cases).
+MFT fell below 90%: two English cases predicted billing instead of licensing, and parks instead of roads.
+
+Re-run: `python -m bayan.evaluation.behavioural --topic-model artifacts/topic_classifier --output data/eval/behavioural_results.json`
+
+### Lab 6 - Step 4: Error analysis
+
+Assistant draft: 120 fixture errors; park paths 55, irrigation 33, playgrounds 32.
+[Histogram, case evidence and three proposed fixes](docs/ERROR_REVIEW_ANALYSIS.md).
+Metric deltas are conditional planning scenarios, not measured improvements.

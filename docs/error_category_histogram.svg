@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="240" viewBox="0 0 760 240">
+<rect width="760" height="240" fill="white"/>
+<g font-family="sans-serif" font-size="15" fill="#172554">
+<text x="20" y="28">Error categories: assistant draft, 120 supplied fixture cases</text>
+<text x="20" y="85">Park paths</text><rect x="230" y="65" width="385" height="28" fill="#2563eb"/><text x="625" y="85">55</text>
+<text x="20" y="135">Park irrigation</text><rect x="230" y="115" width="231" height="28" fill="#2563eb"/><text x="471" y="135">33</text>
+<text x="20" y="185">Playground maintenance</text><rect x="230" y="165" width="224" height="28" fill="#2563eb"/><text x="464" y="185">32</text>
+</g></svg>
