@@ -72,8 +72,8 @@
 ## Lab 7 — Optimisation ladder
 | Rung | p50 | p99 | quality metric / paired Δ | Artefact size |
 |---|---:|---:|---|---:|
-| fp32 torch @512 padded | | | | |
-| fp32 torch @128 dynamic | | | | |
+| fp32 torch @512 padded | 736.10 ms | 1343.33 ms | Not measured yet | 416.20 MiB |
+| fp32 torch @128 dynamic | 42.07 ms | 70.92 ms | Not measured yet | 416.20 MiB |
 | ONNX fp32 @128 | | | | |
 | ONNX INT8 @128 | | | | |
 
@@ -108,3 +108,15 @@ Re-run: `python -m bayan.evaluation.behavioural --topic-model artifacts/topic_cl
 Assistant draft: 120 fixture errors; park paths 55, irrigation 33, playgrounds 32.
 [Histogram, case evidence and three proposed fixes](docs/ERROR_REVIEW_ANALYSIS.md).
 Metric deltas are conditional planning scenarios, not measured improvements.
+
+### Lab 7 - Step 1: CPU baseline
+
+CPU fp32, batch=1, threads=4, warm-up=20 per rung; all 2000 supplied texts.
+Model forward time only; preprocessing, tokenization and HTTP excluded.
+At batch=1, dynamic padding uses each text's actual token length.
+Dynamic/128 speed-up: p50 17.50x; p99 18.94x.
+Texts truncated at 128: 0. Quality change: not measured yet.
+Single sequential run; CPU contention and run order can affect timing.
+[Raw timings and environment](data/serving/baseline_benchmark.json).
+
+Re-run: `python scripts/benchmark_inference.py --threads 4 --warmup 20`
