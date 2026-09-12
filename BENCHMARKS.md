@@ -74,7 +74,7 @@
 |---|---:|---:|---|---:|
 | fp32 torch @512 padded | 736.10 ms | 1343.33 ms | Not measured yet | 416.20 MiB |
 | fp32 torch @128 dynamic | 42.07 ms | 70.92 ms | Not measured yet | 416.20 MiB |
-| ONNX fp32 @128 | | | | |
+| ONNX fp32 @128 | 24.11 ms | 53.82 ms | F1 1.0000; tax 0.0000 pp | 416.37 MiB |
 | ONNX INT8 @128 | | | | |
 
 - HTTP p99, 16 concurrent:
@@ -120,3 +120,17 @@ Single sequential run; CPU contention and run order can affect timing.
 [Raw timings and environment](data/serving/baseline_benchmark.json).
 
 Re-run: `python scripts/benchmark_inference.py --threads 4 --warmup 20`
+
+### Lab 7 - Step 2: ONNX fp32
+
+CPU, 4 intra-op threads, 1 inter-op thread, batch 1; 2000 texts, 20 warm-up requests.
+p99 speed-up vs saved Step 1: 24.96x vs 512; 1.32x vs dynamic/128.
+Timings exclude preprocessing, tokenization and HTTP. Baseline is a previous run; CPU conditions may differ.
+Paired validation: 1217 rows; fp32 macro-F1=1.0000, ONNX=1.0000.
+Tax (fp32 minus ONNX): 0.0000 percentage points; 95% CI [0.0000, 0.0000].
+Prediction disagreements: 0; maximum logit difference: 0.00000572.
+CI uses paired rows (2000 resamples, seed 42); citizen-group dependence is not modelled.
+Original fp32 weights retained unchanged in artifacts/topic_classifier.
+[Export and paired predictions](data/serving/onnx_export_report.json) | [Raw timings](data/serving/onnx_benchmark.json).
+
+Re-run: `python scripts/export_onnx.py --threads 4`, then `python scripts/benchmark_inference.py --onnx --threads 4`.

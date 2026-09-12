@@ -34,9 +34,15 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--threads", type=int, default=4)
     parser.add_argument("--warmup", type=int, default=20)
+    parser.add_argument("--onnx", action="store_true", help="Benchmark exported ONNX using saved Step 1 baseline")
     args = parser.parse_args()
     if args.threads < 1 or args.warmup < 1:
         parser.error("threads and warmup must be positive")
+    if args.onnx:
+        from export_onnx import configure, benchmark_onnx
+        configure(args.threads)
+        benchmark_onnx(args.threads, args.warmup)
+        return
     os.environ["OMP_NUM_THREADS"] = str(args.threads)
     os.environ["MKL_NUM_THREADS"] = str(args.threads)
     import numpy as np
